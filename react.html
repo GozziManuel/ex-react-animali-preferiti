@@ -10,19 +10,98 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script type="text/babel">
-      const ListaAnimali = () => {
-        const animals = ["Cane", "Gatto", "Pappagallo", "Cavallo", "Panda"];
+      function Modal({
+        title,
+        content,
+        show = false,
+        onClose = () => {},
+        input,
+        onChange,
+        onConfirm,
+      }) {
         return (
-          <details>
-            <summary>
-              <strong>Animali</strong>
-            </summary>
-            <ul>
-              {animals.map((el) => (
-                <li>{el}</li>
-              ))}
-            </ul>
-          </details>
+          show &&
+          ReactDOM.createPortal(
+            <div className="modal-container">
+              <div className="modal">
+                <h2>{title}</h2>
+                <label>Aggiungi il tuo animale qua!</label>
+                <input
+                  type="text"
+                  name="text"
+                  onChange={onChange}
+                  value={input}
+                />
+                <p>{content}</p>
+                <button onClick={onClose}>Annulla</button>
+                <button onClick={onConfirm}>Conferma</button>
+              </div>
+            </div>,
+            document.body,
+          )
+        );
+      }
+      const ListaAnimali = () => {
+        const { useState } = React;
+        const [animals, setAnimals] = useState([]);
+        const [numeri, setNumeri] = useState([]);
+        const [show, setShow] = useState(false);
+        const [input, setInput] = useState("");
+        const animaliCasuali = [
+          "Cane",
+          "Gatto",
+          "Pappagallo",
+          "Cavallo",
+          "Panda",
+        ];
+        const handleTrace = (e) => {
+          setInput(e.target.value);
+        };
+        const OnConfirm = () => {
+          console.log(input);
+          const AnimaleNuovo = input;
+          setAnimals([...animals, AnimaleNuovo]);
+          setShow(false);
+        };
+        // function AddAnimal() {
+        //   const numeroCasuale = Math.floor(
+        //     Math.random() * animaliCasuali.length,
+        //   );
+        //   setNumeri([...numeri, numeroCasuale]);
+        //   console.log(numeri.includes(numeroCasuale));
+
+        //   const AnimaleNuovo = animaliCasuali[numeroCasuale];
+        //   setAnimals([...animals, AnimaleNuovo]);
+
+        //   console.log(animaliCasuali[numeroCasuale], numeroCasuale);
+        // }
+        // setAnimals([...animals, Animale]);
+        // console.log(animals, numeri);
+
+        return (
+          <>
+            <button onClick={() => setShow(true)}>Aggiungi Animale</button>
+            <Modal
+              title="Aggiungi Animale"
+              show={show}
+              onClose={() => setShow(false)}
+              input={input}
+              onChange={handleTrace}
+              onConfirm={OnConfirm}
+            />
+            <details>
+              <summary>
+                <strong>Animali</strong>
+              </summary>
+              <ul>
+                {animals.length === 0 ? (
+                  <p>adesso è vuoto aggiungi un po' di gente</p>
+                ) : (
+                  animals.map((el, index) => <li key={index}>{el}</li>)
+                )}
+              </ul>
+            </details>
+          </>
         );
       };
     </script>

@@ -18,6 +18,8 @@
         input,
         onChange,
         onConfirm,
+        error,
+        errorInput,
       }) {
         return (
           show &&
@@ -26,6 +28,7 @@
               <div className="modal">
                 <h2>{title}</h2>
                 <label>Aggiungi il tuo animale qua!</label>
+                <br />
                 <input
                   type="text"
                   name="text"
@@ -35,48 +38,61 @@
                 <p>{content}</p>
                 <button onClick={onClose}>Annulla</button>
                 <button onClick={onConfirm}>Conferma</button>
+                {error && (
+                  <div>Nessun animale trovato nel nostro database!</div>
+                )}
+                {errorInput && <div>Input Vuoto riguarda meglio!</div>}
               </div>
             </div>,
             document.body,
           )
         );
       }
+
       const ListaAnimali = () => {
+        const { useEffect } = React;
         const { useState } = React;
-        const [animals, setAnimals] = useState([]);
         const [numeri, setNumeri] = useState([]);
         const [show, setShow] = useState(false);
         const [input, setInput] = useState("");
-        const animaliCasuali = [
-          "Cane",
-          "Gatto",
-          "Pappagallo",
-          "Cavallo",
-          "Panda",
-        ];
+        const [data, setData] = useState([]);
+        const [error, setError] = useState(false);
+        const [errorInput, setErrorInput] = useState(false);
+
         const handleTrace = (e) => {
           setInput(e.target.value);
         };
-        const OnConfirm = () => {
-          console.log(input);
-          const AnimaleNuovo = input;
-          setAnimals([...animals, AnimaleNuovo]);
-          setShow(false);
+        const OnConfirm = async () => {
+          if (input === "") {
+            setErrorInput(true);
+            setError(false);
+          } else {
+            setErrorInput(false);
+            const animalArray = await getAnimalData(input);
+            const AnimaleNuovo = animalArray[0];
+            if (AnimaleNuovo === undefined) {
+              setError(true);
+            } else {
+              setData((prev) => [...prev, AnimaleNuovo]);
+              setShow(false);
+              setError(false);
+              setInput("");
+            }
+          }
         };
-        // function AddAnimal() {
-        //   const numeroCasuale = Math.floor(
-        //     Math.random() * animaliCasuali.length,
-        //   );
-        //   setNumeri([...numeri, numeroCasuale]);
-        //   console.log(numeri.includes(numeroCasuale));
 
-        //   const AnimaleNuovo = animaliCasuali[numeroCasuale];
-        //   setAnimals([...animals, AnimaleNuovo]);
+        const handleAsync = async (url) => {
+          const response = await fetch(url);
+          const obj = await response.json();
+          return obj;
+        };
 
-        //   console.log(animaliCasuali[numeroCasuale], numeroCasuale);
-        // }
-        // setAnimals([...animals, Animale]);
-        // console.log(animals, numeri);
+        const getAnimalData = async (i) => {
+          const animalFetch = await handleAsync(
+            `http://localhost:3333/animals?search=${i}`,
+          );
+          return animalFetch;
+        };
 
         return (
           <>
@@ -88,18 +104,32 @@
               input={input}
               onChange={handleTrace}
               onConfirm={OnConfirm}
+              error={error}
+              errorInput={errorInput}
             />
             <details>
               <summary>
                 <strong>Animali</strong>
               </summary>
-              <ul>
-                {animals.length === 0 ? (
-                  <p>adesso è vuoto aggiungi un po' di gente</p>
-                ) : (
-                  animals.map((el, index) => <li key={index}>{el}</li>)
-                )}
-              </ul>
+
+              {data.length === 0 ? (
+                <p>adesso è vuoto aggiungi un po' di gente</p>
+              ) : (
+                data.map((el, index) => {
+                  return (
+                    <>
+                      <div className="card">
+                        <h1>{el.name}</h1>
+                        <p>{el.description}</p>
+                        <img
+                          src={el.image === true ? el.image : "/undefined.png"}
+                          alt={el.name}
+                        />
+                      </div>
+                    </>
+                  );
+                })
+              )}
             </details>
           </>
         );
